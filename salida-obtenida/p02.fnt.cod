@@ -1,0 +1,70 @@
+mov @B+10 A
+mov #0 16000
+mov A @B+10
+mov @B+11 A
+mov #0 16000
+mov A @B+11
+L0
+mov #10 16000
+mov @B+11 A
+subi 16001
+jz L1
+mov @B+11 A
+mov @B+11 A
+mov A 16002
+mov #0 16003
+mov 16003 A
+addi 16002
+mov A 16003
+mov @A A
+mov @B+11 A
+itor
+mov A @B+16003
+mov @B+10 A
+mov @B+10 A
+mov @B+11 A
+addi 16004
+mov A @B+10
+mov @B+11 A
+mov @B+11 A
+mov #1 16000
+addi 16001
+mov A @B+11
+jmp L0
+L1
+mov @B+12 A
+mov $0.0 16000
+mov A @B+12
+mov @B+11 A
+mov #0 16000
+mov A @B+11
+L2
+mov #10 16000
+mov @B+11 A
+subi 16001
+jz L3
+mov @B+12 A
+mov @B+12 A
+mov @B+11 A
+mov @B+11 A
+mov A 16002
+mov #0 16003
+mov 16003 A
+addi 16002
+mov A 16003
+mov @A A
+addr 16004
+mov A @B+12
+mov @B+11 A
+mov @B+11 A
+mov #1 16005
+addi 16006
+mov A @B+11
+jmp L2
+L3
+mov @B+12 A
+wrr @A
+wrc #10
+mov @B+10 A
+wri @A
+wrc #10

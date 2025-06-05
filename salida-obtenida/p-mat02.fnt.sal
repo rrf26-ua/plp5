@@ -1,0 +1,13 @@
+AVISO (30.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (35.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (98.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (105.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+
+ERROR(m2r) al leer un valor de la posicion de memoria 36 sin haberlo
+inicializado, en la instrucción 1
+Línea 1: mov @B+36 A
+

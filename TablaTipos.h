@@ -16,6 +16,7 @@ struct unTipo {
   unsigned clase;             // TIPOBASICO o ARRAY
   unsigned tamano;
   unsigned tipoBase;
+  vector<unsigned> dims;      // tamanos de cada dimension
 };
 
 class TablaTipos {
@@ -25,7 +26,7 @@ class TablaTipos {
      vector<unTipo> tipos;
      
      TablaTipos();
-     unsigned nuevoTipoArray(unsigned tam,unsigned tbase);
+     unsigned nuevoTipoArray(const vector<unsigned>& dims,unsigned tbase);
 
 };
 

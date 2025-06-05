@@ -1,0 +1,115 @@
+mov @B+1 A
+mov #7 16000
+mov A @B+1
+mov @B+0 A
+mov @B+1 A
+itor
+mov A @B+0
+mov @B+0 A
+wrr @A
+wrc #10
+mov @B+2 A
+mov @B+1 A
+mov A @B+2
+mov @B+2 A
+wri @A
+wrc #10
+mov #0 16000
+mov #9 16001
+L0 mov 16000 A
+gtri 16001
+jnz L1
+mov 16000 A
+mov A @B+3
+mov @B+3 A
+wri @A
+wrc #10
+mov 16000 A
+addi #1
+mov A 16000
+jmp L0
+L1
+mov $77.77 16000
+wrr @A
+wrc #10
+mov @B+4 A
+mov #0 16000
+mov A @B+4
+mov @B+3 A
+mov #0 16000
+mov A @B+3
+L2
+mov #10 16000
+mov @B+3 A
+subi 16001
+jz L3
+mov @B+3 A
+wri @A
+wrc #10
+mov @B+3 A
+mov @B+3 A
+mov #1 16002
+addi 16003
+mov A @B+3
+mov @B+5 A
+mov @B+4 A
+mov @B+3 A
+addi 16000
+mov A @B+5
+mov @B+4 A
+mov @B+5 A
+mov A @B+4
+jmp L2
+L3
+mov @B+4 A
+mov #2 16000
+mov #4 16001
+addi 16002
+mov #1 16003
+subi 16004
+divi 16005
+wri @A
+wrc #10
+mov @B+4 A
+mov #55 16000
+subi 16001
+jz L6
+mov @B+4 A
+itor
+mov $10.0 16002
+mulr 16003
+wrr @A
+wrc #10
+jmp L7
+L6
+mov @B+4 A
+mov #54 16004
+subi 16005
+jz L4
+mov @B+4 A
+itor
+mov $1000.0 16006
+mulr 16007
+wrr @A
+wrc #10
+jmp L5
+L4
+mov @B+4 A
+itor
+mov $100.0 16008
+mulr 16009
+wrr @A
+wrc #10
+L5
+L7
+mov @B+4 A
+jz L8
+mov @B+1 A
+mov #787 16000
+mov A @B+1
+jmp L9
+L8
+L9
+mov @B+1 A
+wri @A
+wrc #10

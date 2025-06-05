@@ -6,6 +6,7 @@
 #define COMUN_H
 
 #include <string>
+#include <vector>
 using std::string;
 
 /*====================================================================*/
@@ -20,6 +21,15 @@ const unsigned TIPO_ARRAY = 2;
       – Temporales        : 16000-16383 (384 temporales)  */
 const int DIR_BASE_TEMP = 16000;
 const int DIR_MAX_TEMP  = 16383;
+
+/* Estructura auxiliar para manejar listas de indices */
+struct Indice {
+    std::string cod;   // codigo para calcular el indice
+    unsigned tipo;     // tipo del indice
+    int dir;           // temporal con el valor del indice
+    int nlin;          // posicion para mensajes de error
+    int ncol;
+};
 
 /*====================================================================*/
 /* 2. Estructura de atributos (YYSTYPE)                               */
@@ -36,6 +46,9 @@ typedef struct {
     int      dir;           // dirección en memoria (-1 si no aplica)
     bool     lvalor;        // true  -> es l-value (se puede asignar)
                             // false -> es r-value  (constante/temporal)
+
+    std::vector<unsigned> dims; // dimensiones declaradas (tipos array)
+    std::vector<Indice>  indices; // lista de indices en accesos a array
 
     /* Código generado */
     string   cod;           // fragmento m2r para esta sub-expresión
