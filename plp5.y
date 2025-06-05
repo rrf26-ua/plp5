@@ -165,7 +165,7 @@ Read    : READ Ref   {
         ;
 
 /*--------------------------- CONTROL --------------------------------*/
-While   : WHILE Expr Bloque {
+While   : WHILE Expr Instr {
                                    if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"while");
                                    string l1=etq(), l2=etq();
                                    $$.cod = l1+"\n"+$2.cod+"jz "+l2+"\n"+$3.cod+"jmp "+l1+"\n"+l2+"\n";
