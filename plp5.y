@@ -35,7 +35,7 @@ static std::vector<int> pilaDir;     /* para restaurar dirVar en bloques */
 inline string etq(){ stringstream s; s<<"L"<<eti++; return s.str(); }
 
 int  nuevaTemp(){ if(ctemp>DIR_MAX_TEMP) errorSemantico(ERR_MAXTEMP,0,0,""); return ctemp++; }
-void liberaTemporales(){ ctemp = DIR_BASE_TEMP; }
+void liberaTemporales(){ /* no-op to keep temporaries unique */ }
 
 /*--- flag para permitir identificar identificador dentro de lista de índices ---*/
 static bool enIndice = false;
@@ -59,7 +59,8 @@ static bool enIndice = false;
 %%
 
 /*--------------------------- PROGRAMA --------------------------------*/
-S       : FN ID PARI PARD Programa ENDFN     { printf("%s",$5.cod.c_str()); }
+S       : FN ID PARI PARD Programa ENDFN
+        { printf("%shalt\n", $5.cod.c_str()); }
         ;
 
 Programa: LInstr { $$ = $1; }
@@ -130,21 +131,28 @@ Asig    : LET Ref ASIG Expr {
                              if(!$2.lvalor)                      errorSemantico(ERR_ASIG,$3.nlin,$3.ncol,"=");
                              if($2.tipo==ENTERO && $4.tipo==REAL) errorSemantico(ERR_ASIG,$3.nlin,$3.ncol,"=");
                              string rhs = $4.cod;
-                             if($2.tipo==REAL && $4.tipo==ENTERO) rhs += "itor\n";
+                             if($2.tipo==REAL && $4.tipo==ENTERO)
+                                   rhs += "itor\nmov A " + to_string($4.dir) + "\n";
 
                              string almacen;
-                             if(!$2.dims.empty()) /* es componente de array */
-                                   almacen = $2.cod + rhs +
-                                             "mov " + to_string($2.dir) + " A\nmov A @A\n";
+                             if(!$2.cod.empty()) /* componente de array */
+                                  almacen = $2.cod + rhs +
+                                            "mov " + to_string($2.dir) + " A\n"+
+                                            "mov A B\n"+
+                                            "mov " + to_string($4.dir) + " A\n"+
+                                            "mov A @B+0\n";
                              else
-                                   almacen = $2.cod + rhs +
-                                             "mov A @B+"+to_string($2.dir)+"\n";
+                                  almacen = $2.cod + rhs +
+                                            "mov #" + to_string($2.dir) + " A\n"+
+                                            "mov A B\n"+
+                                            "mov " + to_string($4.dir) + " A\n"+
+                                            "mov A @B+0\n";
                              $$.cod = almacen;
                            }
         ;
 
 Print   : PRINT Expr { string ins = ($2.tipo==ENTERO) ? "wri " : "wrr ";
-                       $$.cod = $2.cod + ins + "@A\nwrc #10\n"; }
+                       $$.cod = $2.cod + ins + "A\nwrc #10\n"; }
         ;
 
 Read    : READ Ref   {
@@ -157,7 +165,7 @@ Read    : READ Ref   {
         ;
 
 /*--------------------------- CONTROL --------------------------------*/
-While   : WHILE Expr Bloque {
+While   : WHILE Expr Instr {
                                    if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"while");
                                    string l1=etq(), l2=etq();
                                    $$.cod = l1+"\n"+$2.cod+"jz "+l2+"\n"+$3.cod+"jmp "+l1+"\n"+l2+"\n";
@@ -211,8 +219,10 @@ Loop
           code += l0 + " mov " + to_string(tCont) + " A\n";      // etiqueta + A=i
           code += "gtri " + to_string(tLim) + "\n";              // i > lim ?
           code += "jnz "  + l1             + "\n";              // sí → fin
+          code += "mov #" + to_string(s->dir) + " A\n";          // direccion de la variable
+          code += "mov A B\n";                                   // cargar en B
           code += "mov "  + to_string(tCont) + " A\n";           // A=i
-          code += "mov A @B+" + to_string(s->dir) + "\n";        // var usuario = i
+          code += "mov A @B+0\n";                               // var usuario = i
           code += $5.cod;                                        // cuerpo del bucle
           code += "mov "  + to_string(tCont) + " A\n";           // A=i
           code += "addi #1\n";                                   // A = i + 1
@@ -231,13 +241,21 @@ Rango   : NUMINT DOSP NUMINT   { $$.lexema = string($1.lexema)+":"+string($3.lex
 /*------------------------- EXPRESIONES ------------------------------*/
 Expr    : Expr OPAS Term {
                            bool real = ($1.tipo==REAL || $3.tipo==REAL);
-                           string a=$1.cod, b=$3.cod;
-                           if(real){ if($1.tipo==ENTERO) a+="itor\n"; if($3.tipo==ENTERO) b+="itor\n"; }
+                           string code = $1.cod + $3.cod;
+                           if(real && $3.tipo==ENTERO){
+                               code += "mov " + to_string($3.dir) + " A\n";
+                               code += "itor\n";
+                               code += "mov A " + to_string($3.dir) + "\n";
+                           }
                            string op = ($2.lexema[0]=='+') ? (real?"addr ":"addi ") : (real?"subr ":"subi ");
                            int t=nuevaTemp();
-                           $$.cod = a + b + op + to_string(t) + "\n";
+                           code += "mov " + to_string($1.dir) + " A\n";
+                           if(real && $1.tipo==ENTERO) code += "itor\n";
+                           code += op + to_string($3.dir) + "\n";
+                           code += "mov A " + to_string(t) + "\n";
+                           $$.cod = code;
                            $$.tipo = real?REAL:ENTERO; $$.dir=t; $$.lvalor=false;
-                         }
+                        }
         | OPAS Term %prec UMINUS {
                            int t=nuevaTemp();
                            $$.cod = $2.cod + "neg " + to_string(t) + "\n";
@@ -248,22 +266,52 @@ Expr    : Expr OPAS Term {
 
 Term    : Term OPMD Fact {
                            bool real = ($1.tipo==REAL || $3.tipo==REAL);
-                           string a=$1.cod, b=$3.cod;
-                           if(real){ if($1.tipo==ENTERO) a+="itor\n"; if($3.tipo==ENTERO) b+="itor\n"; }
+                           string code = $1.cod + $3.cod;
+                           if(real && $3.tipo==ENTERO){
+                               code += "mov " + to_string($3.dir) + " A\n";
+                               code += "itor\n";
+                               code += "mov A " + to_string($3.dir) + "\n";
+                           }
                            string op = ($2.lexema[0]=='*') ? (real?"mulr ":"muli ") : (real?"divr ":"divi ");
                            int t=nuevaTemp();
-                           $$.cod = a + b + op + to_string(t) + "\n";
+                           code += "mov " + to_string($1.dir) + " A\n";
+                           if(real && $1.tipo==ENTERO) code += "itor\n";
+                           code += op + to_string($3.dir) + "\n";
+                           code += "mov A " + to_string(t) + "\n";
+                           $$.cod = code;
                            $$.tipo = real?REAL:ENTERO; $$.dir=t; $$.lvalor=false;
-                         }
+                        }
         | Fact { $$=$1; }
         ;
 
-Fact    : NUMINT  { int t=nuevaTemp(); $$.cod="mov #"+string($1.lexema)+" "+to_string(t)+"\n";
-                    $$.tipo=ENTERO; $$.dir=t; $$.lvalor=false; }
-        | NUMREAL { int t=nuevaTemp(); $$.cod="mov $"+string($1.lexema)+" "+to_string(t)+"\n";
-                    $$.tipo=REAL; $$.dir=t; $$.lvalor=false; }
+Fact    : NUMINT  {
+                    int t=nuevaTemp();
+                    $$.cod="mov #"+string($1.lexema)+" A\nmov A "+to_string(t)+"\n";
+                    $$.tipo=ENTERO; $$.dir=t; $$.lvalor=false;
+                  }
+        | NUMREAL {
+                    int t=nuevaTemp();
+                    $$.cod="mov $"+string($1.lexema)+" A\nmov A "+to_string(t)+"\n";
+                    $$.tipo=REAL; $$.dir=t; $$.lvalor=false;
+                  }
         | PARI Expr PARD { $$=$2; }
-        | Ref            { $$=$1; }
+        | Ref            {
+                            if($1.lvalor){
+                                int t=nuevaTemp();
+                                string c = $1.cod;
+                                if($1.cod.empty()){
+                                     c += "mov #"+to_string($1.dir)+" A\n";
+                                     c += "mov @A A\n";
+                                     c += "mov A "+to_string(t)+"\n";
+                                }else{
+                                     c += "mov "+to_string($1.dir)+" A\n";
+                                     c += "mov @A A\n";
+                                     c += "mov A "+to_string(t)+"\n";
+                                }
+                                $$.cod=c; $$.tipo=$1.tipo; $$.dir=t; $$.lvalor=false;
+                            }else
+                                $$=$1;
+                         }
         ;
 
 /*----------------------- REFERENCIAS (arrays) -----------------------*/
@@ -278,7 +326,7 @@ Ref
             }else
                 errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
         }else{
-                $$.cod="mov @B+"+to_string(s->dir)+" A\n";
+                $$.cod="";               /* la direccion es conocida */
                 $$.tipo=s->tipo; $$.dir=s->dir; $$.lvalor=true;
                 $$.dims = s->dims;
         }
@@ -305,13 +353,15 @@ Ref
             if(idx.tipo!=ENTERO) errorSemantico(ERR_INDICE_ENTERO,idx.nlin,idx.ncol,"");
             code += idx.cod;
             if(i==0){
-                code += "mov @B+"+to_string(idx.dir)+" A\n";
+                code += "mov "+to_string(idx.dir)+" A\n";
                 code += "mov A "+to_string(tempOff)+"\n";
             }else{
                 code += "mov "+to_string(tempOff)+" A\n";
-                code += "muli #"+to_string(s->dims[i])+" "+to_string(tempOff)+"\n";
-                code += "mov @B+"+to_string(idx.dir)+" A\n";
+                code += "muli #"+to_string(s->dims[i])+"\n";
+                code += "mov A "+to_string(tempOff)+"\n";
+                code += "mov "+to_string(idx.dir)+" A\n";
                 code += "addi "+to_string(tempOff)+"\n";
+                code += "mov A "+to_string(tempOff)+"\n";
             }
         }
         int taddr = nuevaTemp();
@@ -319,7 +369,6 @@ Ref
         code += "mov "+to_string(taddr)+" A\n";
         code += "addi "+to_string(tempOff)+"\n";
         code += "mov A "+to_string(taddr)+"\n";
-        code += "mov @A A\n";
 
         $$.cod  = code;
         $$.tipo = tt.tipos[s->tipo].tipoBase;
