@@ -119,7 +119,7 @@ Asig    : LET Ref ASIG Expr {
                              if($2.tipo==ENTERO && $4.tipo==REAL) errorSemantico(ERR_ASIG,$3.nlin,$3.ncol,"=");
                              string rhs = $4.cod;
                              if($2.tipo==REAL && $4.tipo==ENTERO) rhs += "itor\n";
-                             $$.cod = $4.cod + rhs + "mov A_DIRB_N "+to_string($2.dir)+"\n";
+                             $$.cod = $4.cod + rhs + "mov A @B+"+to_string($2.dir)+"\n";
                            }
         ;
 
@@ -128,7 +128,7 @@ Print   : PRINT Expr { string ins = ($2.tipo==ENTERO) ? "wri " : "wrr ";
         ;
 
 Read    : READ Ref   { string ins = ($2.tipo==ENTERO) ? "rdi " : "rdr ";
-                       $$.cod = ins + "@A\nmov A_DIRB_N " + to_string($2.dir) + "\n"; }
+                       $$.cod = ins + "@A\nmov A @B+" + to_string($2.dir) + "\n"; }
         ;
 
 /* Control */
@@ -168,7 +168,7 @@ Loop    : LOOP ID RANGE Rango LInstr ENDLOOP {
                                    int tmp = nuevaTemp();
                                    string l1=etq(), l2=etq();
                                    $$.cod = "mov #"+$4.lexema+" "+to_string(tmp)+"\n"+l1+":\n"+
-                                            "mov "+to_string(tmp)+" A\nmov A_DIRB_N "+to_string(s->dir)+"\n"+
+                                            "mov "+to_string(tmp)+" A\nmov A @B+"+to_string(s->dir)+"\n"+
                                             $5.cod+"inc "+to_string(tmp)+"\ncmp "+$4.lexema+"\njnz "+l1+"\n"+l2+":\n";
                                  }
         ;
@@ -218,7 +218,7 @@ Fact    : NUMINT  { int t=nuevaTemp(); $$.cod="mov #"+string($1.lexema)+" "+to_s
 Ref     : ID {
                     Simbolo *s = ts->searchSymb(string($1.lexema));
                     if(!s) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
-                    $$.cod="mov "+to_string(s->dir)+" @A\n";
+                    $$.cod="mov @B+"+to_string(s->dir)+" A\n";
                     $$.tipo=s->tipo; $$.dir=s->dir; $$.lvalor=true;
                   }
         | ID CORA ExprLista CORD {
@@ -226,7 +226,7 @@ Ref     : ID {
                     if(!s) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
                     if(s->tipo<2) errorSemantico(ERR_SOBRAN,$2.nlin,$2.ncol,"[");
                     /* faltan cálculos de offset e índices */
-                    $$.cod=$3.cod+"mov A_DIRB_N "+to_string(s->dir)+"\n";
+                    $$.cod=$3.cod+"mov A @B+"+to_string(s->dir)+"\n";
                     $$.tipo=ENTERO; $$.dir=s->dir; $$.lvalor=true;
                   }
         ;
