@@ -16,13 +16,15 @@ TablaTipos::TablaTipos()
   tipos.push_back(b);
 }
 
-unsigned TablaTipos::nuevoTipoArray(unsigned tam,unsigned tbase)
+unsigned TablaTipos::nuevoTipoArray(const vector<unsigned>& dims,unsigned tbase)
 {
   unTipo a;
 
   a.clase = ARRAY;
-  a.tamano = tam;
+  a.tamano = 1;
+  for(unsigned d: dims) a.tamano *= d;
   a.tipoBase = tbase;
+  a.dims = dims;
 
   tipos.push_back(a);
   return tipos.size()-1;
