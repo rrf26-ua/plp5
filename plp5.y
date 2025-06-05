@@ -86,30 +86,33 @@ Declar  : VAR ID OptType {
                            if(dirVar+tam-1>15999)
                               errorSemantico(ERR_NOCABE,$2.nlin,$2.ncol,$2.lexema.c_str());
                            Simbolo s{string($2.lexema),tdecl,(unsigned)dirVar,tam};
+                           s.dims = $3.dims;
                            ts->newSymb(s);  dirVar += tam;
                            $$.cod = "";
                          }
         ;
 
-OptType : DOSP Tipo { $$.tipo = $2.tipo; }
-        |            { $$.tipo = ENTERO;  }
+OptType : DOSP Tipo { $$.tipo = $2.tipo; $$.dims = $2.dims; }
+        |            { $$.tipo = ENTERO;  $$.dims.clear(); }
         ;
 
-Tipo    : INT_T                 { $$.tipo = ENTERO; }
-        | REAL_T                { $$.tipo = REAL;   }
-        | ARRAY INT_T Dim       { $$.tipo = tt.nuevoTipoArray($3.tpos,ENTERO); }
-        | ARRAY REAL_T Dim      { $$.tipo = tt.nuevoTipoArray($3.tpos,REAL);   }
+Tipo    : INT_T                 { $$.tipo = ENTERO; $$.dims.clear(); }
+        | REAL_T                { $$.tipo = REAL;   $$.dims.clear(); }
+        | ARRAY INT_T Dim       { $$.tipo = tt.nuevoTipoArray($3.dims,ENTERO); $$.dims = $3.dims; }
+        | ARRAY REAL_T Dim      { $$.tipo = tt.nuevoTipoArray($3.dims,REAL);   $$.dims = $3.dims; }
         ;
 
 Dim     : NUMINT COMA Dim {
                              if(atoi($1.lexema.c_str())<=0)
                                  errorSemantico(ERR_DIM,$1.nlin,$1.ncol,$1.lexema.c_str());
-                             $$.tpos = $3.tpos * atoi($1.lexema.c_str());
+                             $$.dims = $3.dims;
+                             $$.dims.insert($$.dims.begin(),atoi($1.lexema.c_str()));
                            }
         | NUMINT {
                              if(atoi($1.lexema.c_str())<=0)
                                  errorSemantico(ERR_DIM,$1.nlin,$1.ncol,$1.lexema.c_str());
-                             $$.tpos = atoi($1.lexema.c_str());
+                             $$.dims.clear();
+                             $$.dims.push_back(atoi($1.lexema.c_str()));
                            }
         ;
 
@@ -119,7 +122,13 @@ Asig    : LET Ref ASIG Expr {
                              if($2.tipo==ENTERO && $4.tipo==REAL) errorSemantico(ERR_ASIG,$3.nlin,$3.ncol,"=");
                              string rhs = $4.cod;
                              if($2.tipo==REAL && $4.tipo==ENTERO) rhs += "itor\n";
-                             $$.cod = $4.cod + rhs + "mov A @B+"+to_string($2.dir)+"\n";
+                             string almacen;
+                             if(!$2.dims.empty()){
+                                 almacen = $2.cod + rhs + "mov " + to_string($2.dir) + " A\nmov A @A\n";
+                             }else{
+                                 almacen = $2.cod + rhs + "mov A @B+"+to_string($2.dir)+"\n";
+                             }
+                             $$.cod = almacen;
                            }
         ;
 
@@ -127,8 +136,13 @@ Print   : PRINT Expr { string ins = ($2.tipo==ENTERO) ? "wri " : "wrr ";
                        $$.cod = $2.cod + ins + "@A\nwrc #10\n"; }
         ;
 
-Read    : READ Ref   { string ins = ($2.tipo==ENTERO) ? "rdi " : "rdr ";
-                       $$.cod = ins + "@A\nmov A @B+" + to_string($2.dir) + "\n"; }
+Read    : READ Ref   {
+                        string ins = ($2.tipo==ENTERO) ? "rdi " : "rdr ";
+                        if(!$2.dims.empty())
+                           $$.cod = $2.cod + ins + "@A\nmov A " + to_string($2.dir) + " A\nmov A @A\n";
+                        else
+                           $$.cod = ins + "@A\nmov A @B+" + to_string($2.dir) + "\n";
+                     }
         ;
 
 /* Control */
@@ -220,19 +234,49 @@ Ref     : ID {
                     if(!s) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
                     $$.cod="mov @B+"+to_string(s->dir)+" A\n";
                     $$.tipo=s->tipo; $$.dir=s->dir; $$.lvalor=true;
+                    $$.dims = s->dims;
                   }
         | ID CORA ExprLista CORD {
                     Simbolo *s = ts->searchSymb(string($1.lexema));
                     if(!s) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
                     if(s->tipo<2) errorSemantico(ERR_SOBRAN,$2.nlin,$2.ncol,"[");
-                    /* faltan cálculos de offset e índices */
-                    $$.cod=$3.cod+"mov A @B+"+to_string(s->dir)+"\n";
-                    $$.tipo=ENTERO; $$.dir=s->dir; $$.lvalor=true;
+                    unsigned ndeclarados = s->dims.size();
+                    unsigned nusados = $3.indices.size();
+                    if(nusados<ndeclarados) errorSemantico(ERR_FALTAN,$4.nlin,$4.ncol,"]");
+                    if(nusados>ndeclarados) {
+                        Indice ex = $3.indices[ndeclarados];
+                        errorSemantico(ERR_SOBRAN,ex.nlin,ex.ncol,"");
+                    }
+                    string code="";
+                    int tempOff = nuevaTemp();
+                    for(size_t i=0;i<ndeclarados;i++){
+                        Indice idx = $3.indices[i];
+                        if(idx.tipo!=ENTERO) errorSemantico(ERR_INDICE_ENTERO,idx.nlin,idx.ncol,"");
+                        code += idx.cod;
+                        if(i==0){
+                            code += "mov @B+"+to_string(idx.dir)+" A\n";
+                            code += "mov A "+to_string(tempOff)+"\n";
+                        }else{
+                            code += "mov "+to_string(tempOff)+" A\n";
+                            code += "muli #"+to_string(s->dims[i])+" "+to_string(tempOff)+"\n";
+                            code += "mov @B+"+to_string(idx.dir)+" A\n";
+                            code += "addi "+to_string(tempOff)+"\n";
+                        }
+                    }
+                    int taddr = nuevaTemp();
+                    code += "mov #"+to_string(s->dir)+" "+to_string(taddr)+"\n";
+                    code += "mov "+to_string(taddr)+" A\n";
+                    code += "addi "+to_string(tempOff)+"\n";
+                    code += "mov A "+to_string(taddr)+"\n";
+                    code += "mov @A A\n";
+                    $$.cod = code;
+                    $$.tipo = tt.tipos[s->tipo].tipoBase;
+                    $$.dir = taddr; $$.lvalor=true; $$.dims.clear();
                   }
         ;
 
-ExprLista : ExprLista COMA Expr { $$.cod=$1.cod+$3.cod; }
-          | Expr                { $$=$1; }
+ExprLista : ExprLista COMA Expr { $$=$1; Indice in; in.cod=$3.cod; in.tipo=$3.tipo; in.dir=$3.dir; in.nlin=$3.nlin; in.ncol=$3.ncol; $$.indices.push_back(in); }
+          | Expr                { Indice in; in.cod=$1.cod; in.tipo=$1.tipo; in.dir=$1.dir; in.nlin=$1.nlin; in.ncol=$1.ncol; $$.indices.clear(); $$.indices.push_back(in); }
           ;
 %%
 

@@ -89,6 +89,8 @@ int ret(int token)
     yylval.tpos   = 0;
     yylval.dir    = -1;
     yylval.lvalor = false;
+    yylval.dims.clear();
+    yylval.indices.clear();
     yylval.cod.clear();
     ncol += yyleng;
     return token;

@@ -17,6 +17,7 @@ struct Simbolo {
   unsigned tipo;
   unsigned dir;
   unsigned tam;
+  vector<unsigned> dims; // tamanos de cada dimension si es array
 };
 
 
