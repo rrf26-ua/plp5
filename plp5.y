@@ -33,6 +33,12 @@ unsigned eti = 0;
 static std::vector<int> pilaDir;
 inline string etq(){ stringstream s; s<<"L"<<eti++; return s.str(); }
 
+/* Variables auxiliares para el manejo de indices en arrays */
+static unsigned maxIndices = 0;      /* numero de dimensiones del array */
+static unsigned posIndice  = 0;      /* indice actualmente procesado */
+static bool     ignoraInd  = false;  /* true si se ignoran errores del indice */
+static Simbolo* currentArray = nullptr;
+
 int  nuevaTemp(){ if(ctemp>DIR_MAX_TEMP) errorSemantico(ERR_MAXTEMP,0,0,""); return ctemp++; }
 void liberaTemporales(){ ctemp = DIR_BASE_TEMP; }
 %}
@@ -146,10 +152,10 @@ Read    : READ Ref   {
         ;
 
 /* Control */
-While   : WHILE Expr Bloque {
+While   : WHILE Expr Instr {
                                    if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"while");
                                    string l1=etq(), l2=etq();
-                                   $$.cod = l1+":\n"+$2.cod+"jz "+l2+"\n"+$3.cod+"jmp "+l1+"\n"+l2+":\n";
+                                   $$.cod = l1+": "+$2.cod+"jz "+l2+"\n"+$3.cod+"jmp "+l1+"\n"+l2+":\n";
                                  }
         ;
 
@@ -158,7 +164,7 @@ If      : IF Expr Instr Ip {
                                   string l1=etq(), l2=etq();
                                   $$.cod = $2.cod + "jz " + l1 + "\n" +
                                            $3.cod + "jmp " + l2 + "\n" +
-                                           l1 + ":\n" + $4.cod + l2 + ":\n";
+                                           l1 + ": " + $4.cod + l2 + ":\n";
                                 }
         ;
 
@@ -168,7 +174,7 @@ Ip      : ELSE Instr FI                  { $$ = $2; }
                                   string l1=etq(), l2=etq();
                                   $$.cod = $2.cod + "jz " + l1 + "\n" +
                                            $3.cod + "jmp " + l2 + "\n" +
-                                           l1 + ":\n" + $4.cod + l2 + ":\n";
+                                           l1 + ": " + $4.cod + l2 + ":\n";
                                 }
         | FI                               { $$.cod = ""; }
         |                                  { $$.cod = ""; }
@@ -181,17 +187,15 @@ Loop    : LOOP ID RANGE Rango LInstr ENDLOOP {
                                          errorSemantico(ERR_LOOP,$1.nlin,$1.ncol,$2.lexema.c_str());
                                    int tmp = nuevaTemp();
                                    string l1=etq(), l2=etq();
-                                   $$.cod = "mov #"+$4.lexema+" "+to_string(tmp)+"\n"+l1+":\n"+
-                                            "mov "+to_string(tmp)+" A\nmov A @B+"+to_string(s->dir)+"\n"+
-                                            $5.cod+"inc "+to_string(tmp)+"\ncmp "+$4.lexema+"\njnz "+l1+"\n"+l2+":\n";
+                                   $$.cod = "mov #"+to_string($4.tpos)+" "+to_string(tmp)+"\n"+
+                                            l1+": mov "+to_string(tmp)+" A\n"+
+                                            "mov A @B+"+to_string(s->dir)+"\n"+
+                                            $5.cod+"inc "+to_string(tmp)+"\ncmp #"+to_string($4.dir)+"\njnz "+l1+"\n"+l2+":\n";
                                  }
         ;
-
-Rango   : NUMINT DOSP NUMINT { $$.lexema = string($1.lexema)+":"+string($3.lexema); }
-        | NUMINT             { $$.lexema = "0:"+string($1.lexema); }
+Rango   : NUMINT DOSP NUMINT { $$.tpos = atoi($1.lexema.c_str()); $$.dir = atoi($3.lexema.c_str()); }
+        | NUMINT             { $$.tpos = 0; $$.dir = atoi($1.lexema.c_str()); }
         ;
-
-/* Expresiones */
 Expr    : Expr OPAS Term {
                            bool real = ($1.tipo==REAL || $3.tipo==REAL);
                            string a=$1.cod, b=$3.cod;
@@ -231,27 +235,32 @@ Fact    : NUMINT  { int t=nuevaTemp(); $$.cod="mov #"+string($1.lexema)+" "+to_s
 
 Ref     : ID {
                     Simbolo *s = ts->searchSymb(string($1.lexema));
-                    if(!s) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
-                    $$.cod="mov @B+"+to_string(s->dir)+" A\n";
-                    $$.tipo=s->tipo; $$.dir=s->dir; $$.lvalor=true;
-                    $$.dims = s->dims;
+                    if(!s){ if(!ignoraInd) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
+                             $$.cod=""; $$.tipo=ENTERO; $$.dir=0; $$.lvalor=false; $$.dims.clear(); }
+                    else {
+                       $$.cod="mov @B+"+to_string(s->dir)+" A\n";
+                       $$.tipo=s->tipo; $$.dir=s->dir; $$.lvalor=true;
+                       $$.dims = s->dims;
+                    }
                   }
-        | ID CORA ExprLista CORD {
-                    Simbolo *s = ts->searchSymb(string($1.lexema));
-                    if(!s) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str());
-                    if(s->tipo<2) errorSemantico(ERR_SOBRAN,$2.nlin,$2.ncol,"[");
+        | ID { currentArray = ts->searchSymb(string($1.lexema));
+                if(!currentArray) errorSemantico(ERR_NODECL,$1.nlin,$1.ncol,$1.lexema.c_str()); }
+          CORA { maxIndices=currentArray->dims.size(); posIndice=0; }
+          ExprLista CORD {
+                    Simbolo *s = currentArray;
+                    if(s->tipo<2) errorSemantico(ERR_SOBRAN,$3.nlin,$3.ncol,"[");
                     unsigned ndeclarados = s->dims.size();
-                    unsigned nusados = $3.indices.size();
-                    if(nusados<ndeclarados) errorSemantico(ERR_FALTAN,$4.nlin,$4.ncol,"]");
+                    unsigned nusados = $5.indices.size();
+                    if(nusados<ndeclarados) errorSemantico(ERR_FALTAN,$6.nlin,$6.ncol,"]");
                     if(nusados>ndeclarados) {
-                        Indice ex = $3.indices[ndeclarados];
-                        errorSemantico(ERR_SOBRAN,ex.nlin,ex.ncol,"");
+                        Indice ex = $5.indices[ndeclarados];
+                        errorSemantico(ERR_SOBRAN,ex.nlin,ex.ncol-2,"");
                     }
                     string code="";
                     int tempOff = nuevaTemp();
                     for(size_t i=0;i<ndeclarados;i++){
-                        Indice idx = $3.indices[i];
-                        if(idx.tipo!=ENTERO) errorSemantico(ERR_INDICE_ENTERO,idx.nlin,idx.ncol,"");
+                        Indice idx = $5.indices[i];
+                        if(idx.tipo!=ENTERO) errorSemantico(ERR_INDICE_ENTERO,idx.nlin,idx.ncol-1,"");
                         code += idx.cod;
                         if(i==0){
                             code += "mov @B+"+to_string(idx.dir)+" A\n";
@@ -275,8 +284,9 @@ Ref     : ID {
                   }
         ;
 
-ExprLista : ExprLista COMA Expr { $$=$1; Indice in; in.cod=$3.cod; in.tipo=$3.tipo; in.dir=$3.dir; in.nlin=$3.nlin; in.ncol=$3.ncol; $$.indices.push_back(in); }
-          | Expr                { Indice in; in.cod=$1.cod; in.tipo=$1.tipo; in.dir=$1.dir; in.nlin=$1.nlin; in.ncol=$1.ncol; $$.indices.clear(); $$.indices.push_back(in); }
+ExprLista : ExprLista COMA { ignoraInd = (posIndice >= maxIndices); } Expr
+            { $$=$1; Indice in; if(!ignoraInd){ in.cod=$4.cod; in.tipo=$4.tipo; in.dir=$4.dir; } else { in.cod=""; in.tipo=ENTERO; in.dir=0; } in.nlin=$4.nlin; in.ncol=$4.ncol; $$.indices.push_back(in); posIndice++; ignoraInd=false; }
+          | Expr                { ignoraInd = (posIndice >= maxIndices); Indice in; if(!ignoraInd){ in.cod=$1.cod; in.tipo=$1.tipo; in.dir=$1.dir; } else { in.cod=""; in.tipo=ENTERO; in.dir=0; } in.nlin=$1.nlin; in.ncol=$1.ncol; $$.indices.clear(); $$.indices.push_back(in); posIndice++; ignoraInd=false; }
           ;
 %%
 
