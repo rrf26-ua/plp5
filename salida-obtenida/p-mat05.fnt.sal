@@ -1,0 +1,85 @@
+AVISO (17.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (22.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (27.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (32.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (37.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (52.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (57.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (62.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (67.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (72.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (89.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (94.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (99.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (104.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (109.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (126.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (131.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (136.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (141.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (146.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (163.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (168.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (173.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (178.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (183.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (196.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (201.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (206.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (211.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (216.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (230.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (235.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (240.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (245.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (250.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (264.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (269.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (274.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (279.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (284.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+
+ERROR(m2r) al leer un valor de la posicion de memoria 4 sin haberlo
+inicializado, en la instrucción 1
+Línea 1: mov @B+4 A
+

@@ -1,1 +1,1 @@
-Error sintactico (3,3): en 'var'
+Error semantico (6,14): el indice de un array debe ser de tipo entero

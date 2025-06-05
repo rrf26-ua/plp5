@@ -1,1 +1,1 @@
-Error sintactico (3,3): en 'var'
+Error semantico (12,3): la expresion del 'if' debe ser de tipo entero

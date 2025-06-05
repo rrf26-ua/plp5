@@ -1,0 +1,4 @@
+
+ERROR(m2r): Acceso incorrecto a memoria en la instrucción 9 (dir=32002)
+Línea 9: mov @B+16000 A
+

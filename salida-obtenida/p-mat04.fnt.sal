@@ -1,0 +1,11 @@
+AVISO (22.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (89.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+AVISO (102.9): caracter '1' inesperado o falta ';' para comentario
+ (la instrucción 'muli' debe tener 1 argumentos)
+
+ERROR(m2r) al leer un valor de la posicion de memoria 8 sin haberlo
+inicializado, en la instrucción 1
+Línea 1: mov @B+8 A
+
