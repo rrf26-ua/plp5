@@ -1,0 +1,9 @@
+fn nima()
+
+  var a:array int 2,2,2,2;
+  var b;
+
+  let b = a[1,1,1,1, esteIndiceSobra ] ; /* Error semantico (6,20): sobran indices  */
+
+
+endfn

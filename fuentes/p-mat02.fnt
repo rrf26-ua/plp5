@@ -1,0 +1,31 @@
+fn mat2()
+
+  var a:array int 3,3,4;
+  var n;
+
+  let n = 0;
+  var i;var j;var k;
+  loop i range 02
+    loop j range 2
+      loop k range 00003
+       blq
+        let a[i,j,k] = n;
+        let n = n+1
+       fblq
+      endloop
+    endloop
+  endloop;
+
+  let n = 0;
+  loop i range 100:102
+    loop j range 0:2
+      loop k range 100000:100003
+        let n = n+a[i-100,j,k-100000]
+      endloop
+    endloop
+  endloop;
+
+  print n /* Salida: 630 */
+
+endfn
+

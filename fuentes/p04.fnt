@@ -1,0 +1,29 @@
+fn primos()
+
+  var a;
+  var b;
+  var suma;
+  var i;
+  var EsPrimo : int;
+
+  let suma = 0;
+  read a;           /* Entrada : 9 */
+  let b = 1;
+  while a-b 
+   blq
+    let i = b-1;
+    let EsPrimo = 1;
+    while EsPrimo * i * (i-1)  /*  EsPrimo && (i>1) */
+      if i*(b / i)-b
+        let i = i-1
+      else
+        let EsPrimo = 0
+      fi;
+    let a = a+2-2;
+    if EsPrimo let suma = suma+b fi;
+    let b = b+1
+   fblq;
+  print suma      /* debe salir "18" */
+
+endfn
+

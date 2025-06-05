@@ -1,0 +1,32 @@
+fn main()
+
+ var v : array real 10;
+
+ var si;
+ var i;
+ let si = 0;
+ let i = 0;
+ while 10-i
+  blq
+    let v[i] = i;
+    let si = si + i;
+    let i = i + 1
+  fblq;
+
+ var suma : real;
+ let suma = 0.0;
+ let i = 0;
+ while 10-i
+  blq
+    let suma = suma + v[i];
+    let i = i + 1
+  fblq;
+
+ print suma;
+ print si
+endfn
+
+/* Salida
+  45.000
+45
+*/

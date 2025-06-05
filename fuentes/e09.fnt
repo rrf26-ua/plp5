@@ -1,0 +1,5 @@
+fn aimn()
+
+  var a : array int 1,0;  /* Error semantico (3,23): la dimension debe ser mayor que 0 */
+
+endfn

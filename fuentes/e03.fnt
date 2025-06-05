@@ -1,0 +1,11 @@
+fn niam()
+
+  var a: array int 10000;    /* 10000 posiciones, de la 0 a la 9999 */
+  var b: array real 60,100;  /*  6000 posiciones, de la 10000 a la 15999 */
+
+  var c;  /* Error semantico (5,7): la variable 'c' ya no cabe en memoria */
+
+
+
+
+endfn

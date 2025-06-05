@@ -1,0 +1,40 @@
+fn mat4()
+
+  var a:array int 2,2;
+  var b:array int 2,2;
+
+  var i;
+  var j;
+  var diferencia;
+
+  let i = 0;
+  while 2-i
+   blq
+    let j = 0;
+    while 2-j
+     blq
+      let a[i,j] = 0;
+      let j = j+1
+     fblq;
+    let i = i+1
+   fblq;
+
+  /* La entrada es:  2 3 -4 5  */
+  let i = 0;
+  while 2-i
+   blq
+    read b[i,0];
+    read b[i,1];    
+    let i = i+1
+   fblq;
+
+  let diferencia = 0;
+  loop i range 1
+    loop j range 1
+      let diferencia = diferencia+(a[i,j]-b[j,i])
+    endloop
+  endloop;
+
+  print diferencia     /* Salida: -6 */
+
+endfn

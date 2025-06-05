@@ -1,0 +1,10 @@
+fn nmai()
+
+  var a : array real 10;
+  var b;
+  var c : array int 15;
+
+  let a[7] = 15;  /* real = entero   [correcto] */
+  let b = a[7];   /* Error semantico (8,9): tipos incompatibles en la asignacion */
+
+endfn

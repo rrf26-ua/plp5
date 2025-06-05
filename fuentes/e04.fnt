@@ -1,0 +1,15 @@
+fn iman()
+
+  var a;
+  var b:real;
+
+  blq
+     var b;
+   
+     let b = 7
+  fblq;
+
+  if b    /* Error semantico (12,3): la expresion del 'if' debe ser de tipo entero  */
+    print a
+
+endfn

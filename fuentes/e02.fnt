@@ -1,0 +1,20 @@
+fn mian()
+
+  var a;  let a = 123;
+  var b;  let b = 456;
+
+  blq
+    var a;
+    blq
+      var b;
+      blq
+        let a = 789;
+        let b = 012
+      fblq
+    fblq;
+    var b : real;
+    let b = 9.898
+  fblq;
+  var b : int;   /* Error semantico (18,7): variable 'b' ya declarada */
+
+endfn

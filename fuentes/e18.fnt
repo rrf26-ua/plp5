@@ -1,0 +1,8 @@
+fn nami()
+
+  var b:array real 10,5;
+  var a:array real 5,10;
+
+  print a[2*7,b[3,1]]; /* Error semantico (6,14): el indice de un array debe ser de tipo entero */
+
+endfn

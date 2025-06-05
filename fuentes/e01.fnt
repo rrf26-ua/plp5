@@ -1,0 +1,9 @@
+fn main()
+
+  blq
+    var a;
+    let a = 789
+  fblq;
+
+  let a = 987  /* Error semantico (8,7): variable 'a' no declarada  */
+endfn

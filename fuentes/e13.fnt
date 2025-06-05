@@ -1,0 +1,8 @@
+fn inam()
+
+  var a:array real 5,7,3;
+
+  print a[1,2];  /* Error semantico (5,14): faltan indices */
+
+
+endfn
