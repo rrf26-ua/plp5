@@ -54,7 +54,10 @@ void liberaTemporales(){ ctemp = DIR_BASE_TEMP; }
 %start S
 %%
 
-S       : FN ID PARI PARD Bloque ENDFN        { printf("%s",$5.cod.c_str()); }
+S       : FN ID PARI PARD Programa ENDFN     { printf("%s",$5.cod.c_str()); }
+        ;
+
+Programa: LInstr { $$ = $1; }
         ;
 
 /* Bloques con pila para restaurar dirVar */
@@ -65,6 +68,7 @@ Bloque  : BLQ           { pilaDir.push_back(dirVar); ts = new TablaSimbolos(ts);
         ;
 
 LInstr  : LInstr PYC Instr { $$=$1; $$.cod += $3.cod; liberaTemporales(); }
+        | LInstr PYC       { $$=$1; }
         | Instr            { $$=$1; }
         ;
 
@@ -72,13 +76,17 @@ Instr   : Declar | Asig | Print | Read | While | If | Loop | Bloque ;
 
 /* Declaraciones */
 Declar  : VAR ID OptType {
-                           if(ts->searchSymb(string($2.lexema)))
+                           bool rep=false;
+                           for(auto &simb: ts->simbolos)
+                               if(simb.nombre==string($2.lexema)) rep=true;
+                           if(rep)
                               errorSemantico(ERR_YADECL,$2.nlin,$2.ncol,$2.lexema.c_str());
                            unsigned tdecl = $3.tipo;
-                           if(dirVar+1>15999)
+                           unsigned tam = (tdecl<TIPO_ARRAY)?1:tt.tipos[tdecl].tamano;
+                           if(dirVar+tam-1>15999)
                               errorSemantico(ERR_NOCABE,$2.nlin,$2.ncol,$2.lexema.c_str());
-                           Simbolo s{string($2.lexema),tdecl,(unsigned)dirVar,1};
-                           ts->newSymb(s);  dirVar += 1;
+                           Simbolo s{string($2.lexema),tdecl,(unsigned)dirVar,tam};
+                           ts->newSymb(s);  dirVar += tam;
                            $$.cod = "";
                          }
         ;
@@ -124,31 +132,32 @@ Read    : READ Ref   { string ins = ($2.tipo==ENTERO) ? "rdi " : "rdr ";
         ;
 
 /* Control */
-While   : WHILE Expr DO LInstr OD {
+While   : WHILE Expr Bloque {
                                    if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"while");
                                    string l1=etq(), l2=etq();
-                                   $$.cod = l1+":\n"+$2.cod+"jz "+l2+"\n"+$4.cod+"jmp "+l1+"\n"+l2+":\n";
+                                   $$.cod = l1+":\n"+$2.cod+"jz "+l2+"\n"+$3.cod+"jmp "+l1+"\n"+l2+":\n";
                                  }
         ;
 
-If      : IF Expr THEN LInstr Ip {
-                                   if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"if");
-                                   string l1=etq(), l2=etq();
-                                   $$.cod = $2.cod + "jz " + l1 + "\n" +
-                                            $4.cod + "jmp " + l2 + "\n" +
-                                            l1 + ":\n" + $5.cod + l2 + ":\n";
-                                 }
+If      : IF Expr Instr Ip {
+                                  if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"if");
+                                  string l1=etq(), l2=etq();
+                                  $$.cod = $2.cod + "jz " + l1 + "\n" +
+                                           $3.cod + "jmp " + l2 + "\n" +
+                                           l1 + ":\n" + $4.cod + l2 + ":\n";
+                                }
         ;
 
-Ip      : ELSE LInstr FI                  { $$ = $2; }
-        | ELIF Expr THEN LInstr Ip {
-                                   if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"elif");
-                                   string l1=etq(), l2=etq();
-                                   $$.cod = $2.cod + "jz " + l1 + "\n" +
-                                            $4.cod + "jmp " + l2 + "\n" +
-                                            l1 + ":\n" + $5.cod + l2 + ":\n";
-                                 }
+Ip      : ELSE Instr FI                  { $$ = $2; }
+        | ELIF Expr Instr Ip {
+                                  if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"elif");
+                                  string l1=etq(), l2=etq();
+                                  $$.cod = $2.cod + "jz " + l1 + "\n" +
+                                           $3.cod + "jmp " + l2 + "\n" +
+                                           l1 + ":\n" + $4.cod + l2 + ":\n";
+                                }
         | FI                               { $$.cod = ""; }
+        |                                  { $$.cod = ""; }
         ;
 
 /* Loop simplificado */
