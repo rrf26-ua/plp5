@@ -157,10 +157,13 @@ Print   : PRINT Expr { string ins = ($2.tipo==ENTERO) ? "wri " : "wrr ";
 
 Read    : READ Ref   {
                         string ins = ($2.tipo==ENTERO) ? "rdi " : "rdr ";
-                        if(!$2.dims.empty())
-                           $$.cod = $2.cod + ins + "@A\nmov A " + to_string($2.dir) + " A\nmov A @A\n";
+                        string code = $2.cod;
+                        if(code.empty())
+                               code += "mov #" + to_string($2.dir) + " A\n";
                         else
-                           $$.cod = ins + "@A\nmov A @B+" + to_string($2.dir) + "\n";
+                               code += "mov " + to_string($2.dir) + " A\n";
+                        code += ins + "@A\n";
+                        $$.cod = code;
                      }
         ;
 
