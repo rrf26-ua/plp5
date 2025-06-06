@@ -35,7 +35,7 @@ static std::vector<int> pilaDir;     /* para restaurar dirVar en bloques */
 inline string etq(){ stringstream s; s<<"L"<<eti++; return s.str(); }
 
 int  nuevaTemp(){ if(ctemp>DIR_MAX_TEMP) errorSemantico(ERR_MAXTEMP,0,0,""); return ctemp++; }
-void liberaTemporales(){ ctemp = DIR_BASE_TEMP; }
+void liberaTemporales(){ /* no-op to keep temporaries unique */ }
 
 /*--- flag para permitir identificar identificador dentro de lista de índices ---*/
 static bool enIndice = false;
@@ -165,7 +165,7 @@ Read    : READ Ref   {
         ;
 
 /*--------------------------- CONTROL --------------------------------*/
-While   : WHILE Expr Bloque {
+While   : WHILE Expr Instr {
                                    if($2.tipo!=ENTERO) errorSemantico(ERR_IFWHILE,$1.nlin,$1.ncol,"while");
                                    string l1=etq(), l2=etq();
                                    $$.cod = l1+"\n"+$2.cod+"jz "+l2+"\n"+$3.cod+"jmp "+l1+"\n"+l2+"\n";
@@ -357,9 +357,11 @@ Ref
                 code += "mov A "+to_string(tempOff)+"\n";
             }else{
                 code += "mov "+to_string(tempOff)+" A\n";
-                code += "muli #"+to_string(s->dims[i])+" "+to_string(tempOff)+"\n";
+                code += "muli #"+to_string(s->dims[i])+"\n";
+                code += "mov A "+to_string(tempOff)+"\n";
                 code += "mov "+to_string(idx.dir)+" A\n";
                 code += "addi "+to_string(tempOff)+"\n";
+                code += "mov A "+to_string(tempOff)+"\n";
             }
         }
         int taddr = nuevaTemp();
